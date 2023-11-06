@@ -1,37 +1,26 @@
-local api = vim.api
 local M = {}
 
--- Create a window possibly using pop?
+local api = vim.api
+local win, buf
 
--- local function create_window()
---   -- What do I need in order to make a window
---   -- TODO: Get width and height from nvim if not config..
---   local width = 70
---   local height = 20
---   local borderchars = { "─", "│", "─", "│", "╭", "╮", "╯", "╰" }
+-- Builds a table of strings defining the border for the window
+-- [
+-- '╔' + '═' x number of columns in window width + '╗'
+-- '║' + ' ' blank spaces for window width +       '║' --> rows like these are inserted to the table for the entire height of the table
+-- '╚' + '═' x number of columns in window width + '╝' 
+-- ]
+local function build_border_lines(win_width, win_height)
+  local border_lines = { '╔' .. string.rep('═', win_width) .. '╗' }
+  local middle_line = '║' .. string.rep(' ', win_width) .. '║'
 
---   local bufnr = vim.api.nvim_create_buf(false, false)
+  for i = 1, win_height do
+    table.insert(border_lines, middle_line)
+  end
 
---   local docker_win_id, win = popup.create(bufnr, {
---     title = "Docker Buddy",
---     line = math.floor(((vim.o.lines - height) / 2) - 1),
---     col = math.floor((vim.o.columns - width) / 2),
---     minwidth = width,
---     minheight = height,
---     borderchars = borderchars
---   })
+  table.insert(border_lines, '╚' .. string.rep('═', win_width) .. '╝')
 
---   vim.api.nvim_win_set_option(
---       win.border.win_id,
---       "winhl",
---       "Normal:HarpoonBorder"
---   )
-
---   return {
---     win_id = docker_win_id,
---     bufrn = bufnr
---   }
--- end
+  return border_lines
+end
 
 local function open_window()
   buf = api.nvim_create_buf(false, true)
@@ -42,10 +31,10 @@ local function open_window()
 
   -- get dimensions
   local width = api.nvim_get_option("columns") ---> Gets the actual number of cursor positions on the x axis
-  local height = api.nvim_get_option("lines") ---> Gets teh actual number of row positions on the Y axis I'm not sure if it counts tabs, etc..
+  local height = api.nvim_get_option("lines")  ---> Gets teh actual number of row positions on the Y axis I'm not sure if it counts tabs, etc..
 
   -- calculate our floating window size
-  -- The 0.8 is the percentage (80%) of the editor height we want to cover. 
+  -- The 0.8 is the percentage (80%) of the editor height we want to cover.
   -- subtracting 1 for top and bottom padding
   local win_height = math.ceil(height * 0.8 - 1)
   local win_width = math.ceil(width * 0.8)
@@ -59,24 +48,45 @@ local function open_window()
   local row = math.ceil((height - win_height) / 2 - 1)
   -- Same principle but for left and right space around the window
   local col = math.ceil((width - win_width) / 2)
-  
+
   -- set some options
   local opts = {
-    style = "minimal", --> removes lines in the window
-    relative = "editor", --> makes it so size and positioning are calculated relative to the editor grid
+    style = "minimal",   --> removes lines, highlights, and spelling errors in the window
+    relative = "editor", -->  Calculates values starting from the top-left corner of the editor
     width = win_width,
     height = win_height,
 
-    -- Together these values find a point where the NW corner of the winow will be placed
+    -- Together these values find a point from the top-left corner of the editor
     row = row, --> which row to position the window
-    col = col --> at which column to position the window
+    col = col  --> at which column to position the window
   }
 
+  local border_opts = {
+    style = 'minimal',
+    relative = 'editor',
+    -- Make the height and width slightly taller and wider
+    width = win_width + 2,
+    height = win_height + 2,
+
+    -- Position slightly to the top left of the window, so it's not overlapped by it 
+    row = row - 1,
+    col = col - 1
+  }
+
+  local border_buf = api.nvim_create_buf(false, true)
+  local border_lines = build_border_lines(win_width, win_height)
+
+  api.nvim_buf_set_lines(border_buf, 0, -1, false, border_lines)
+
+  local border_win = api.nvim_open_win(border_buf, true, border_opts)
   -- First argument - buffer number
   -- second argument - whether the window should be focused
   -- third are display options
   win = api.nvim_open_win(buf, true, opts)
+
+  -- Creates a listener basically saying
+  -- When a buffer is wiped, execute "silent bwipeout! <border_buf>" close the border buffer too
+  api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "'..border_buf)
 end
 
-
-
+open_window()
