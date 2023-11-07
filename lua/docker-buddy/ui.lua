@@ -89,6 +89,12 @@ local function open_window()
   api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "'..border_buf)
 end
 
+local function center(str)
+  local width = api.nvim_win_get_width(0)
+  local shift = math.floor(width / 2) - math.floor(string.len(str) / 2)
+  return string.rep(' ', shift) .. str
+end
+
 -- TODO: Move this into it's own file that makes use of this UI modlue
 local function update_view()
   local running_containers = vim.fn.systemlist('docker container ls --format "{{.ID}} {{.Names}} {{.Status}}"')
@@ -97,8 +103,13 @@ local function update_view()
     running_containers[k] = '  ' ..running_containers[k]
   end
 
+  api.nvim_buf_set_lines(buf, 0, -1, false, {
+    center("Docker Buddy"),
+    ''
+  })
   api.nvim_buf_set_lines(buf, 0, -1, false, running_containers)
 end
+
 
 open_window()
 update_view()
