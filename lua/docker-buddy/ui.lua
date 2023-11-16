@@ -107,7 +107,7 @@ function UI.update_view()
   api.nvim_buf_set_lines(buf, 0, -1, false, running_containers)
 end
 
-UI.open_window()
-UI.update_view()
+-- UI.open_window()
+-- UI.update_view()
 
 return UI
