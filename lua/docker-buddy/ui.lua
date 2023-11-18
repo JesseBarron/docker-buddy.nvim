@@ -1,7 +1,11 @@
-local M = {}
+local UI = {}
 
 local api = vim.api
 local win, buf
+
+function UI.helloWorld()
+  print("HELLO WORLD")
+end
 
 -- Builds a table of strings defining the border for the window
 -- [
@@ -22,7 +26,8 @@ local function build_border_lines(win_width, win_height)
   return border_lines
 end
 
-local function open_window()
+
+ function UI.open_window()
   buf = api.nvim_create_buf(false, true)
 
   -- This is pretty much saying, when the buffer is no longer displayed
@@ -87,10 +92,12 @@ local function open_window()
   -- Creates a listener basically saying
   -- When a buffer is wiped, execute "silent bwipeout! <border_buf>" close the border buffer too
   api.nvim_command('au BufWipeout <buffer> exe "silent bwipeout! "'..border_buf)
+  return buf
 end
 
+
 -- TODO: Move this into it's own file that makes use of this UI modlue
-local function update_view()
+function UI.update_view()
   local running_containers = vim.fn.systemlist('docker container ls --format "{{.ID}} {{.Names}} {{.Status}}"')
 
   for k, _ in pairs(running_containers) do
@@ -100,5 +107,7 @@ local function update_view()
   api.nvim_buf_set_lines(buf, 0, -1, false, running_containers)
 end
 
-open_window()
-update_view()
+-- UI.open_window()
+-- UI.update_view()
+
+return UI
