@@ -1,2 +1,21 @@
 # docker-buddy.nvim
-An nvim plugin that helps you manage your docker containers
+A small plugin that allows you to easily restart, pause, unpause, and connect to your running docker containers.
+
+
+# Installation
+> Make sure you have `toggleterm.nvim` installed: https://github.com/akinsho/toggleterm.nvim
+
+lazyvim
+```lua
+{
+    "??"
+}
+```
+
+Plug
+```lua
+??
+```
+
+
+
