@@ -1,11 +1,6 @@
 local Terminal = require'toggleterm.terminal'.Terminal
 local M = {}
 
--- Shape of table
--- {
--- "ID"= <container id>
--- "Names"= <name of the container>
--- }
 function M.getRunningContainters()
   local containers = {}
   local containerStringList =  vim.fn.systemlist("docker container ls --format='{{json .}}'")
@@ -14,11 +9,19 @@ function M.getRunningContainters()
     local containerTable = vim.json.decode(containerJson)
     table.insert(containers, {
       ID = containerTable['ID'],
-      Names = containerTable['Names']
+      Names = containerTable['Names'],
+      State = containerTable['State'],
+      Status = containerTable['Status'],
+      Image = containerTable['Image'],
+      Ports = containerTable['Ports']
     })
   end
 
   return containers
+end
+
+function M.extractContainerIDFromCurrentLine()
+  return vim.split(vim.trim(vim.api.nvim_get_current_line()), ' ')[1]
 end
 
 local function findContainer(containerIdentifier)
@@ -31,33 +34,32 @@ local function findContainer(containerIdentifier)
   error('Container "'.. containerIdentifier ..'" not found', 1)
 end
 
-local function findContainerAndExecuteCommand(containerIdentifier, operation)
+local function findContainerAndExecuteCommand(containerIdentifier, action)
   local success, result = pcall(findContainer, containerIdentifier)
 
   if not success then
     return print(result)
   end
 
+  if action == 'connect' then
+    return M.connectToContainer(containerIdentifier)
+  end
+
   local containerId = result["ID"]
-  local resetResult = vim.fn.system("docker container "..operation.." "..containerId)
+  local resetResult = vim.fn.system("docker container "..action.." "..containerId)
 
   if string.find(resetResult, 'Error') then
     print(resetResult)
   else
-    print("Successfully "..operation.." Container: "..containerIdentifier)
+    print("Successfully "..action.." Container: "..containerIdentifier)
   end
 end
 
-function M.restartContainer(containerIdentifier)
-  findContainerAndExecuteCommand(containerIdentifier, 'restart')
-end
-
-function M.pauseContainer(containerIdentifier)
-  findContainerAndExecuteCommand(containerIdentifier, 'pause')
-end
-
-function M.unpauseContainer(containerIdentifier)
-  findContainerAndExecuteCommand(containerIdentifier, 'unpause')
+local UI = require('docker-buddy.ui')
+function M.executeActionOnCurrentLine(action)
+ local containerId =  M.extractContainerIDFromCurrentLine()
+  findContainerAndExecuteCommand(containerId, action)
+  UI.update_view(M.getRunningContainters())
 end
 
 function M.connectToContainer(containerIdentifier)
@@ -70,12 +72,11 @@ function M.connectToContainer(containerIdentifier)
     cmd=command
   })
 
-  term:toggle()
+  term:open()
 end
--- M.connectToContainer('3a82c4e92a0e')
-
 
 -- TODO:
--- - Enhance GUI with buffer keybinds, legends, and user input.
--- - After that work on updating UI with icons for paused running, ect...
+-- Add legend to the floating window
+-- - Implement tests
 return M
+

@@ -1,11 +1,7 @@
 local UI = {}
-
 local api = vim.api
-local win, buf
-
-function UI.helloWorld()
-  print("HELLO WORLD")
-end
+local buf
+local win
 
 -- Builds a table of strings defining the border for the window
 -- [
@@ -83,7 +79,7 @@ end
 
   api.nvim_buf_set_lines(border_buf, 0, -1, false, border_lines)
 
-  local border_win = api.nvim_open_win(border_buf, true, border_opts)
+  api.nvim_open_win(border_buf, true, border_opts)
   -- First argument - buffer number
   -- second argument - whether the window should be focused
   -- third are display options
@@ -95,19 +91,25 @@ end
   return buf
 end
 
+function UI.update_view(running_containers)
+  local container_lines = {}
+  local cursor_pos = api.nvim_win_get_cursor(win)
 
--- TODO: Move this into it's own file that makes use of this UI modlue
-function UI.update_view()
-  local running_containers = vim.fn.systemlist('docker container ls --format "{{.ID}} {{.Names}} {{.Status}}"')
-
-  for k, _ in pairs(running_containers) do
-    running_containers[k] = '  ' ..running_containers[k]
+  api.nvim_buf_set_lines(buf, 0, -1, false, {'  ID  Names  State  Status  Image  Ports'})
+  for _,c in pairs(running_containers) do
+    table.insert(container_lines,
+      '  '..c['ID']..
+      '  '..c['Names']..
+      '  '..c['State']..
+      '  '..c['Status']..
+      '  '..c['Image']..
+      '  '..c['Ports']
+    )
   end
 
-  api.nvim_buf_set_lines(buf, 0, -1, false, running_containers)
+  api.nvim_buf_set_lines(buf, 1, -1, false, container_lines)
+  api.nvim_win_set_cursor(win, cursor_pos)
 end
 
--- UI.open_window()
--- UI.update_view()
-
 return UI
+
