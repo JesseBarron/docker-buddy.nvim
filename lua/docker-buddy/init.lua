@@ -10,12 +10,6 @@ local function set_all_buffer_keymaps(buf)
 end
 
 -- Create A Few Commads
-vim.api.nvim_create_user_command('DocBudRestart', function(args)
-  P(args)
-end, {
-    nargs = "*"
-})
-
 vim.api.nvim_create_user_command('DockerBuddy', function ()
   local buf = UI.open_window()
  set_all_buffer_keymaps(buf)
