@@ -17,7 +17,11 @@ local function build_border_lines(win_width, win_height)
     table.insert(border_lines, middle_line)
   end
 
-  table.insert(border_lines, '╚' .. string.rep('═', win_width) .. '╝')
+  local legend = ' R(estart) -- P(ause) -- U(npause) -- E(connect) '
+  local legend_length = string.len(legend)
+  local bottom_border = string.rep('═', (win_width/2) - (legend_length/2))
+
+  table.insert(border_lines, '╚' .. bottom_border .. legend .. bottom_border .. '╝')
 
   return border_lines
 end
