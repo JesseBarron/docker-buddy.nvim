@@ -37,7 +37,7 @@ end
 vim.api.nvim_create_user_command("DockerBuddy", function()
 	local buf = UI.open_window()
 	set_all_buffer_keymaps(buf)
-	-- UI.update_view(Actions.getRunningContainters())
+	UI.update_view(Actions.getRunningContainters())
 end, {})
 
 -- set keybind to open the tool.

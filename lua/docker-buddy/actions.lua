@@ -1,4 +1,3 @@
--- local Terminal = require("toggleterm.terminal").Terminal
 local M = {}
 
 function M.getRunningContainters()
@@ -68,12 +67,35 @@ function M.connectToContainer(containerIdentifier)
 	end
 
 	local command = "docker exec -it " .. containerIdentifier .. " bash"
-	-- TODO: replace this with native nvim terminal window
-	-- local term = Terminal:new({
-	-- 	cmd = command,
-	-- })
 
-	-- term:open()
+	local width = vim.api.nvim_get_option_value("columns", {}) ---> Gets the actual number of cursor positions on the x axis
+	local height = vim.api.nvim_get_option_value("lines", {}) ---> Gets teh actual number of row positions on the Y axis I'm not sure if it counts tabs, etc..
+
+	local win_height = math.ceil(height * 0.8 - 1)
+	local win_width = math.ceil(width * 0.8)
+
+	-- Here we find where to position the window by finding the
+	-- ammount of rows that are not being taken up by the window (difference)
+	-- This value would position the window such that the buttom of it will
+	-- touch the bottom of the editor.
+	-- If we split the value in half, then the ammount of top and bottom
+	-- space will be even around the window
+	local row = math.ceil((height - win_height) / 2 - 1)
+	-- Same principle but for left and right space around the window
+	local col = math.ceil((width - win_width) / 2)
+
+	local buf = vim.api.nvim_get_current_buf()
+	vim.api.nvim_buf_set_option(buf, "buftype", "terminal")
+
+	-- local term_win = vim.api.nvim_open_win(
+	-- 	buf,
+	-- 	true,
+	-- 	{ relative = "editor", width = win_width, height = win_height, row = row, col = col }
+	-- )
+
+	local term_chan = vim.api.nvim_open_term(buf, {})
+
+	vim.api.nvim_chan_send(term_chan, command .. "\n")
 end
 
 -- TODO:

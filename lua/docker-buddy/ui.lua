@@ -42,6 +42,7 @@ function UI.open_window()
 end
 
 function UI.update_view(running_containers)
+	api.nvim_set_option_value("modifiable", true, { buf = buf })
 	local container_lines = {}
 	local cursor_pos = api.nvim_win_get_cursor(win)
 
@@ -66,6 +67,7 @@ function UI.update_view(running_containers)
 
 	api.nvim_buf_set_lines(buf, 1, -1, false, container_lines)
 	api.nvim_win_set_cursor(win, cursor_pos)
+	api.nvim_set_option_value("modifiable", false, { buf = buf })
 end
 
 return UI
